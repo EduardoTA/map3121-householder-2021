@@ -257,7 +257,7 @@ def metodo_QR(alfa, beta, epsilon, deslocamentos, V):
     return (Diagonal_principal, temp_V, k)
 
 def AutovalsAutovecs(A, epsilon, deslocamentos):
-    H = np.identity(4)
+    H = np.identity(A.shape[0])
     householder = HouseHolder(A, H, A.shape[0])
     alfa = np.zeros(A.shape[0])
     beta = np.zeros(A.shape[0]-1)
