@@ -46,10 +46,11 @@ def HouseHolder(A, H, n):
                 A[j,i] = A[i,j]
         # Multiplicação para encontrar HT
         for i in range(0,n):
-            produto_escalar[i] = -2*dot_prod(w,np.squeeze((np.asarray(H[:,i]))),I+1)/dot_prod(w,w,I+1)
+            produto_escalar[i] = -2*dot_prod(w,np.squeeze((np.asarray(H[i,:]))),I+1)/dot_prod(w,w,I+1)
         for i in range(0,n):
-            for j in range(I+1,n):
+            for j in range(I,n):
                 H[i,j]=H[i,j]+produto_escalar[i]*w[j]
+    #print("Erro holdeholder = {0}".format(np.matmul(H, np.transpose(H))-np.identity(n)))
     return (A, H)
 
 def metodo_QR(alfa, beta, epsilon, deslocamentos, V):

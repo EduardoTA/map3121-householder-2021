@@ -3,7 +3,7 @@ import numpy as np
 import math as math
 
 def EstimativasErroGerais(A, Lambda, HV):
-    n = A.shape[0]
+    n = Lambda.shape[0]
 
     # Faz uma estimativa de erro = max(abs(H*V*VT*HT-I))
     erro = np.max(np.abs(np.matmul(HV, np.transpose(HV)) - np.identity(n)))
@@ -27,29 +27,57 @@ def EstimativasErroGerais(A, Lambda, HV):
                 .format(np.mean(np.divide(np.matmul(A, HV[:, i]), HV[:, i])), Lambda[i], erros[i]))
     print('Erro máximo = {0}\n'.format(np.max(erros)))
 
-def teste_a():
+def EstimativasErroAnalitico(Lambda):
+    n = Lambda.shape[0]
+
+    # Calcula os autovalores reais, pela fórmula analítica, e ordena eles do maior para o menor
+    autovalores_reais = 1/2*(1-np.cos((2*np.arange(n, 0, -1)-1)*np.pi/(2*n+1)))**(-1)
+    autovalores_reais = np.flip(np.sort(autovalores_reais))
+
+    autovalores_obtidos = np.copy(np.flip(np.sort(Lambda)))
+
+    erros = np.zeros(n)
+
+    # Faz a comparação entre os autovalores reais e os obtidos pelo método
+    print('Autovalor obtido | Autovalor real | erro')
+    for i in range(0, n):
+        erros[i] = math.sqrt(math.pow(autovalores_obtidos[i] - autovalores_reais[i], 2))
+        print('{0:12.10f}       {1:12.10f}     {2}'.format(autovalores_obtidos[i], autovalores_reais[i],erros[i]))
+    print('-----------------------------')
+    print('Erro máx: ', np.max(erros))
+    print('\n')
+
+
+def teste_b():
     # Menu de seleção
     print('############')
-    print('Teste a selecionado')
+    print('Teste b selecionado')
     print('############')
 
     epsilon = 0.1
     deslocamentos = True
+    n = 20
 
     try:
         epsilon = float(input('epsilon = '))
+        n = int(input('n = '))
         deslocamentos = input('Usar deslocamentos espectrais? (s,n)')
         if deslocamentos == 's':
             deslocamentos = True
         else:
             deslocamentos = False
     except:
-        print('epsilon deve ser número real, pe: 1e-6')
+        print('epsilon deve ser número real, pe: 1e-6 e n deve ser inteiro')
         return
-    
-    print("\nOs autovalores e autovetores da matriz do item 4.1.a serão impressos\n")
 
-    A = np.matrix([[2,4,1,1],[4,2,1,1],[1,1,1,2],[1,1,2,1.0]])
+    print("\nOs autovalores e autovetores da matriz do item 4.1.b serão impressos\n")
+
+    A = np.ones((n,n))
+    for k in range(0,n):
+        for j in range(0,k+1):
+            A[k,j] = n-k
+        for i in range(0,k):
+            A[i,k] = n-k
 
     resultados = aa.AutovalsAutovecs(A, epsilon, deslocamentos)
 
@@ -65,14 +93,8 @@ def teste_a():
     print("\n")
     print('############\n')
     EstimativasErroGerais(A, resultados[0], resultados[1])
-
-    #Lambda = np.zeros((A.shape[0], A.shape[0]))
-    #for i in range(0, A.shape[0]):
-    #    Lambda[i,i] = resultados[0][i]
-    
-    #erro = np.max(np.abs((np.matmul(np.matmul(resultados[1], Lambda), np.transpose(resultados[1])) - A)))
-    #print("\nEstimativa de erro H*L*HT-A = {0}\n".format(erro))
+    print('############')
+    EstimativasErroAnalitico(resultados[0])
     print('############')
 
-    return
-teste_a()
+teste_b()
