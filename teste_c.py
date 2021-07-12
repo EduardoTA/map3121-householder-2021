@@ -2,145 +2,255 @@ import AutovalsAutovecs as aa
 import numpy as np
 np.set_printoptions(linewidth=500)
 np.set_printoptions(formatter={'float': '{: 12.10f}'.format})
+np.set_printoptions(precision=10)
 import math as math
 
-def check_symmetric(a, tol=1e-8):
-    return np.all(np.abs(a-a.T) < tol)
+# def check_symmetric(a, tol=1e-8):
+#     return np.all(np.abs(a-a.T) < tol)
 
+def teste_c():
+    # Menu de seleção
+    print('############')
+    print('Teste c selecionado')
+    print('############')
 
-f = 0
-with open('input-c') as f:
-    f = f.read().split()
+    epsilon = 0.1
+    deslocamentos = True
+    f = 0
 
-n_total = int(f.pop(0)) # Número de nós da treliça
-n_moveis = int(f.pop(0)) # Número de nós móveis da treliça
-n_barras = int(f.pop(0)) # Número de barras da treliça
+    n_total = 0 # Número de nós da treliça
+    n_moveis = 0 # Número de nós móveis da treliça
+    n_barras = 0 # Número de barras da treliça
 
-rho = float(f.pop(0)) # Densidade rho [kg/m³]
-A = float(f.pop(0)) # Área transversal das barras [m²]
-E = float(f.pop(0)) # Módulo de elasticidade em GPa
-E = E*1e9 # Módulo de elasticidade em Pa
+    rho = 0 # Densidade rho [kg/m³]
+    A = 0 # Área transversal das barras [m²]
+    E = 0 # Módulo de elasticidade em Pa
 
-K = np.zeros((n_moveis*2, n_moveis*2)) # Matrix de rigidez total
-m = np.zeros(n_moveis) # Vetor de massas dos nós
-M = np.zeros((n_moveis*2, n_moveis*2))
+    K = 0 # Matrix de rigidez total
+    m = 0 # Vetor de massas dos nós
+    M = 0 # Matriz onde as massas dos nós estarão na diagonal principal
 
-count_nos = 0 # Contador para saber quando chegou nos nós fixos
-for barra in range(0, n_barras):
-    # Extraindo cada linha do arquivo correspondente às barras
-    i = int(f[barra*4])
-    i =i-1
-    j = int(f[barra*4+1])
-    j =j-1
-    theta = float(f[barra*4+2])
-    L = float(f[barra*4+3])
+    # count_nos = 0 # Contador para saber quando chegou nos nós fixos
 
-    alfa = A*E/L # Coeficiente da equação (1)
-    C = math.cos(theta*math.pi/180)
-    S = math.sin(theta*math.pi/180)
+    # Fazendo leitura das entradas de usuário
+    try:
+        nome_arquivo = str(input('Digite o nome do arquivo: '))
+        with open(nome_arquivo) as f:
+            f = f.read().split()
+    except:
+        print('Arquivo não existe ou está indisponível')
+        return
+    try:
+        epsilon = float(input('epsilon = '))
+        deslocamentos = input('Usar deslocamentos espectrais? (s,n)')
+        if deslocamentos == 's':
+            deslocamentos = True
+        else:
+            deslocamentos = False
+    except:
+        print('epsilon deve ser número real, pe: 1e-6')
+        return
+    print("\nA treliça descrita no arquivo será resolvida...\n")
 
-    print('i = '+str(i))
-    print('j = '+str(j))
-    print('theta = '+str(theta))
-    print('L = '+str(L))
-    print('C = '+str(C))
-    print('S = '+str(S))
+    # Se for detectado erro na leitura do arquivo, a exceção não vai travar o programa
+    try:
+        n_total = int(f.pop(0)) # Número de nós da treliça
+        n_moveis = int(f.pop(0)) # Número de nós móveis da treliça
+        n_barras = int(f.pop(0)) # Número de barras da treliça
+
+        rho = float(f.pop(0)) # Densidade rho [kg/m³]
+        A = float(f.pop(0)) # Área transversal das barras [m²]
+        E = float(f.pop(0)) # Módulo de elasticidade em GPa
+        E = E*1e9 # Módulo de elasticidade em Pa
+
+        K = np.zeros((n_moveis*2, n_moveis*2)) # Matrix de rigidez total
+        m = np.zeros(n_moveis) # Vetor de massas dos nós
+        M = np.zeros((n_moveis*2, n_moveis*2)) # Matriz onde as massas dos nós estarão na diagonal principal
     
-
-
-    # Fazendo o cálculo de cada elemento da matriz da equação (1)
-    n = n_moveis*2
-    if 0 <= 2*i < n:
-        K[2*i, 2*i] = K[2*i, 2*i]+alfa*C**2
-        if 0 <= 2*i+1 < n:
-            K[2*i, 2*i+1] = K[2*i, 2*i+1]+alfa*C*S
-            K[2*i+1, 2*i] = K[2*i+1, 2*i]+alfa*C*S
-        if 0 <= 2*j < n:
-            K[2*i, 2*j] = K[2*i, 2*j]-alfa*C**2
-            K[2*j, 2*i] = K[2*j, 2*i]-alfa*C**2
-        if 0 <= 2*j+1 < n:
-            K[2*i, 2*j+1] = K[2*i, 2*j+1]-alfa*C*S
-            K[2*j+1, 2*i] = K[2*j+1, 2*i]-alfa*C*S
-    if 0 <= 2*i+1 < n:
-        K[2*i+1, 2*i+1] = K[2*i+1, 2*i+1]+alfa*S**2
-        if 0 <= 2*j < n:
-            K[2*i+1, 2*j] = K[2*i+1, 2*j]-alfa*C*S
-            K[2*j, 2*i+1] = K[2*j, 2*i+1]-alfa*C*S
-        if 0 <= 2*j+1 < n:
-            K[2*i+1, 2*j+1] = K[2*i+1, 2*j+1]-alfa*S**2
-            K[2*j+1, 2*i+1] = K[2*j+1, 2*i+1]-alfa*S**2
-    if 0 <= 2*j < n:
-        K[2*j, 2*j] = K[2*j, 2*j]+alfa*C**2
-        if 1 <= 2*j+1 < n:
-            K[2*j, 2*j+1] = K[2*j, 2*j+1]+alfa*C*S
-            K[2*j+1, 2*j] = K[2*j+1, 2*j]+alfa*C*S
-    if 0 <= 2*j+1 < n:
-        K[2*j+1, 2*j+1] = K[2*j+1, 2*j+1]+alfa*S**2
+    except:
+        print('Erro na leitura dos parâmetros das 2 primeiras linhas do arquivo')
+        return
         
-    try:
-        m[i] = m[i]+ 1/2*rho*A*L
-    except:
-        pass
-    try:
-        m[j] = m[j]+ 1/2*rho*A*L
-    except:
-        pass
+
+    # Uma iteração é realizada para cada barra
+    for barra in range(0, n_barras):
+        try:
+            # Extraindo cada linha do arquivo correspondente às barras
+            i = int(f[barra*4]) # Extrai o nó i
+            j = int(f[barra*4+1]) # Extrai o nó j
+            if i > n_total or j > n_total: # Se for detectado i ou j inválido, levantar exceção
+                raise
+            i = i-1 # Faz o índice começar em 0
+            j = j-1 # Faz o índice começar em 0
+            theta = float(f[barra*4+2]) # Extrai o ângulo da barra
+            L = float(f[barra*4+3]) # Extrai o comprimento da barra
+        except:
+            print('Erro na leitura dos parâmetros das barras da treliça')
+            return
+
+        alfa = A*E/L # Coeficiente da equação (1)
+        C = math.cos(theta*math.pi/180) # Cosseno da equação (1)
+        S = math.sin(theta*math.pi/180) # Seno da equação (1)
+
+        # print('i = '+str(i))
+        # print('j = '+str(j))
+        # print('theta = '+str(theta))
+        # print('L = '+str(L))
+        # print('C = '+str(C))
+        # print('S = '+str(S))
+
+        # Fazendo o cálculo de cada elemento da matriz da equação (1)
+        # E somando à matriz K na posição correta
+        n = n_moveis*2 # Dimensão das matrizes
+        if 0 <= 2*i < n:
+            K[2*i, 2*i] = K[2*i, 2*i]+alfa*C**2
+            if 0 <= 2*i+1 < n:
+                K[2*i, 2*i+1] = K[2*i, 2*i+1]+alfa*C*S
+                K[2*i+1, 2*i] = K[2*i+1, 2*i]+alfa*C*S
+            if 0 <= 2*j < n:
+                K[2*i, 2*j] = K[2*i, 2*j]-alfa*C**2
+                K[2*j, 2*i] = K[2*j, 2*i]-alfa*C**2
+            if 0 <= 2*j+1 < n:
+                K[2*i, 2*j+1] = K[2*i, 2*j+1]-alfa*C*S
+                K[2*j+1, 2*i] = K[2*j+1, 2*i]-alfa*C*S
+        if 0 <= 2*i+1 < n:
+            K[2*i+1, 2*i+1] = K[2*i+1, 2*i+1]+alfa*S**2
+            if 0 <= 2*j < n:
+                K[2*i+1, 2*j] = K[2*i+1, 2*j]-alfa*C*S
+                K[2*j, 2*i+1] = K[2*j, 2*i+1]-alfa*C*S
+            if 0 <= 2*j+1 < n:
+                K[2*i+1, 2*j+1] = K[2*i+1, 2*j+1]-alfa*S**2
+                K[2*j+1, 2*i+1] = K[2*j+1, 2*i+1]-alfa*S**2
+        if 0 <= 2*j < n:
+            K[2*j, 2*j] = K[2*j, 2*j]+alfa*C**2
+            if 1 <= 2*j+1 < n:
+                K[2*j, 2*j+1] = K[2*j, 2*j+1]+alfa*C*S
+                K[2*j+1, 2*j] = K[2*j+1, 2*j]+alfa*C*S
+        if 0 <= 2*j+1 < n:
+            K[2*j+1, 2*j+1] = K[2*j+1, 2*j+1]+alfa*S**2
+
+        # Nestes dois ifs, as massas de cada nó são acumuladas no vetor m
+        if 0 <= i < n_moveis:
+            m[i] = m[i] + 1/2*rho*A*L
+        if 0 <= j < n_moveis:
+            m[j] = m[j] + 1/2*rho*A*L
+
+        # count_nos += count_nos
     
-    print('\n')
-    # Somando 1 no contador
-    count_nos += count_nos
+    # A matriz K e o vetor m estão completamente montados
 
-tilde_M = np.zeros((n_moveis*2, n_moveis*2))
-for no in range(0, n_moveis):
-    M[no*2,no*2] = m[no]
-    M[no*2+1, no*2+1] = m[no]
+    # Agora são montadas as matrizes M, tilde_M e tilde_K
+    tilde_M = np.zeros((n_moveis*2, n_moveis*2)) # M^(-1/2)
+    
+    # Este for monta as matrizes M e tilde_M
+    for no in range(0, n_moveis):
+        M[no*2,no*2] = m[no]
+        M[no*2+1, no*2+1] = m[no]
 
-    tilde_M[no*2,no*2] = 1/math.sqrt(m[no])
-    tilde_M[no*2+1, no*2+1] = tilde_M[no*2,no*2]
+        tilde_M[no*2,no*2] = 1/math.sqrt(m[no])
+        tilde_M[no*2+1, no*2+1] = tilde_M[no*2,no*2]
 
-tilde_K = np.matmul(np.matmul(tilde_M, K), tilde_M)
+    # Esta multiplicação de matrizes monta a matriz tilde_K
+    tilde_K = np.matmul(np.matmul(tilde_M, K), tilde_M) # M^(-1/2)*K*M^(-1/2)
 
-resultados = aa.AutovalsAutovecs(tilde_K, 1e-6, True)
+    # Aqui o método QR com Householder é aplicado
+    resultados = aa.AutovalsAutovecs(tilde_K, epsilon, deslocamentos)
 
-for i in range(0, tilde_K.shape[0]):
-    for j in range(0, tilde_K.shape[0]):
-        if np.abs(tilde_K[i,j]) < 1e-6:
-            tilde_K[i,j] = 0
+    # Calcula as frequências
+    w = np.zeros(n_moveis*2)
+    for i in range(n_moveis*2):
+        w[i] = math.sqrt(resultados[0][i]) # w = sqrt(lambda)
 
-print('massas')
-print(m)
+    # Calcula os modos de vibração
+    z = np.zeros((n_moveis*2, n_moveis*2))
+    for j in range(n_moveis*2):
+        z[:,j] = tilde_M.dot(resultados[1][:,j]) # z = M^(-1/2)*y
+    
+    # Seletor de opções:
+    def seletor():
+        print('\n')
+        print('############')
+        print('Selecione uma opção:')
+        print('(0) Para imprimir as frequências e modos naturais no terminal')
+        print('(1) Dump de matrizes e vetores do programa')
+        print('(2) Estimativa de erro')
+        print('(qualquer outra) Para sair do teste')
+        selecao = input('= ')
+        if selecao == '0':
+            print('\n')
+            for i in range(0, n_moveis*2):
+                # Configuração de impressão para ter mais dígitos
+                np.set_printoptions(formatter={'float': '{: 12.10f}'.format})
 
-print(check_symmetric(M))
+                # Impressão dos autovals/autovecs
+                print('freq: {0:12.10f},\nmodo:'.format(w[i]), z[:, i])
+                print('\n')
+            seletor()
+        elif selecao == '1':
+            print('\n')
+            try:
+                np.savetxt('m.txt', m)
+                np.savetxt('K.txt', K)
+                np.savetxt('tilde_K.txt', tilde_K)
+                np.savetxt('M.txt', M)
+                np.savetxt('tilde_M.txt', tilde_M)
+                np.savetxt('w.txt', w)
+                np.savetxt('z.txt', z)
+                print('Arquivos criados com sucesso')
+            except:
+                print('Arquivos não foram criados com sucesso')
+            seletor()
+        elif selecao == '2':
+            print('\n')
+            print('Estimativa de erro comparando sqrt((K*z)/(M*z)) com as frequências obtidas')
+            erros = np.zeros(n)
+            for i in range(0, n_moveis*2):
+                erros[i] = np.abs(np.sqrt(np.max(np.divide(K.dot(z[:,i]), M.dot(z[:,i])))) - w[i])
+                print('Autovalor obtido fazendo sqrt((K*z)/(M*z)): {0:12.10f},'
+                        '  Autovalor obtido pelo método: {1:12.10f}, erro: {2}'
+                        .format(np.sqrt(np.max(np.divide(K.dot(z[:,i]), M.dot(z[:,i])))), w[i], erros[i]))
+            print('Erro máximo = {0}\n'.format(np.max(erros)))
+            
+            print('\n')
+            print('Estimativa de erro calculando M*x\" + K*x, para t=0s')
 
-np.savetxt('K.txt', K)
+            erros = np.zeros(n)
+            for i in range(0, n_moveis*2):
+                erros[i] = np.max(np.abs(-(w[i]**2)*M.dot(z[:,i])+K.dot(z[:,i])))
+                print('freq.: {0:12.10f}, |-w^2*M*z + K*z|: {1:12.10f}'
+                        .format(w[i],
+                        np.max(np.abs(-(w[i]**2)*M.dot(z[:,i])+K.dot(z[:,i]))))
+                    )
+            print('Erro máximo = {0}\n'.format(np.max(erros)))
+            print('\n')
+            seletor()
+        else:
+            return
+    seletor()
+    return
 
-np.savetxt('M.txt', M)
 
-np.savetxt('tilde_M.txt', tilde_M)
 
-# Calcula as frequências
-w = np.zeros(n_moveis*2)
-for i in range(n_moveis*2):
-    w[i] = math.sqrt(resultados[0][i])
+    
 
-# Calcula os modos de vibração
-z = np.zeros((n_moveis*2, n_moveis*2))
-for j in range(n_moveis*2):
-    z[:,j] = tilde_M.dot(resultados[1][:,j])
+    
 
-np.set_printoptions(precision=10)
-for i in range(0, n_moveis*2):
-    # Configuração de impressão para ter mais dígitos
-    np.set_printoptions(formatter={'float': '{: 12.10f}'.format})
+    
 
-    # Impressão dos autovals/autovecs
-    print('freq: {0:12.10f}, modo:'.format(w[i]), z[:, i])
+    
 
-print('M:')
-print(M)
-print('tilde_M:')
-print(tilde_M)
-print('tilde_K:')
-print(tilde_K)
+    
 
-print(w)
+    
+    
+
+    print('M:')
+    print(M)
+    print('tilde_M:')
+    print(tilde_M)
+    print('tilde_K:')
+    print(tilde_K)
+
+    print(w)
+
+teste_c()
