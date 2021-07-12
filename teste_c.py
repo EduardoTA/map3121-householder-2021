@@ -9,7 +9,7 @@ def check_symmetric(a, tol=1e-8):
 
 
 f = 0
-with open('input-e') as f:
+with open('input-c') as f:
     f = f.read().split()
 
 n_total = int(f.pop(0)) # Número de nós da treliça
@@ -50,118 +50,33 @@ for barra in range(0, n_barras):
 
     # Fazendo o cálculo de cada elemento da matriz da equação (1)
     n = n_moveis*2
-    if 0 <= 2*i-1 < n:
-        K[2*i-1, 2*i-1] = K[2*i-1, 2*i-1]+alfa*C**2
-        if 0 <= 2*i < n:
-            K[2*i-1, 2*i] = K[2*i-1, 2*i]+alfa*C*S
-            K[2*i, 2*i-1] = K[2*i, 2*i-1]+alfa*C*S
-        if 0 <= 2*j-1 < n:
-            K[2*i-1, 2*j-1] = K[2*i-1, 2*j-1]-alfa*C**2
-            K[2*j-1, 2*i-1] = K[2*j-1, 2*i-1]-alfa*C**2
-        if 0 <= 2*j < n:
-            K[2*i-1, 2*j] = K[2*i-1, 2*j]-alfa*C*S
-            K[2*j, 2*i-1] = K[2*j, 2*i-1]-alfa*C*S
     if 0 <= 2*i < n:
-        K[2*i, 2*i] = K[2*i, 2*i]+alfa*S**2
-        if 0 <= 2*j-1 < n:
-            K[2*i, 2*j-1] = K[2*i, 2*j-1]-alfa*C*S
-            K[2*j-1, 2*i] = K[2*j-1, 2*i]-alfa*C*S
-            print(K[2*i, 2*j-1])
+        K[2*i, 2*i] = K[2*i, 2*i]+alfa*C**2
+        if 0 <= 2*i+1 < n:
+            K[2*i, 2*i+1] = K[2*i, 2*i+1]+alfa*C*S
+            K[2*i+1, 2*i] = K[2*i+1, 2*i]+alfa*C*S
         if 0 <= 2*j < n:
-            K[2*i, 2*j] = K[2*i, 2*j]-alfa*S**2
-            K[2*j, 2*i] = K[2*j, 2*i]-alfa*S**2
-    if 0 <= 2*j-1 < n:
-        K[2*j-1, 2*j-1] = K[2*j-1, 2*j-1]+alfa*C**2
+            K[2*i, 2*j] = K[2*i, 2*j]-alfa*C**2
+            K[2*j, 2*i] = K[2*j, 2*i]-alfa*C**2
+        if 0 <= 2*j+1 < n:
+            K[2*i, 2*j+1] = K[2*i, 2*j+1]-alfa*C*S
+            K[2*j+1, 2*i] = K[2*j+1, 2*i]-alfa*C*S
+    if 0 <= 2*i+1 < n:
+        K[2*i+1, 2*i+1] = K[2*i+1, 2*i+1]+alfa*S**2
         if 0 <= 2*j < n:
-            K[2*j-1, 2*j] = K[2*j-1, 2*j]+alfa*C*S
-            K[2*j, 2*j-1] = K[2*j, 2*j-1]+alfa*C*S
+            K[2*i+1, 2*j] = K[2*i+1, 2*j]-alfa*C*S
+            K[2*j, 2*i+1] = K[2*j, 2*i+1]-alfa*C*S
+        if 0 <= 2*j+1 < n:
+            K[2*i+1, 2*j+1] = K[2*i+1, 2*j+1]-alfa*S**2
+            K[2*j+1, 2*i+1] = K[2*j+1, 2*i+1]-alfa*S**2
     if 0 <= 2*j < n:
-        K[2*j, 2*j] = K[2*j, 2*j]+alfa*S**2
-    # try:
-    #     K[2*i-1, 2*i-1] += alfa*C**2
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*i-1, 2*i-1, K[2*i-1, 2*i-1]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*i-1, 2*i] += alfa*C*S
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*i-1, 2*i, K[2*i-1, 2*i]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*i-1, 2*j-1] += -alfa*C**2
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*i-1, 2*j-1, K[2*i-1, 2*j-1]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*i-1, 2*j] += -alfa*C*S
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*i-1, 2*j, K[2*i-1, 2*j]))
-    # except:
-    #     pass
-
-    # try:
-    #     K[2*i, 2*i-1] += alfa*C*S
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*i, 2*i-1, K[2*i, 2*i-1]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*i, 2*i] += alfa*S**2
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*i, 2*i, K[2*i, 2*i]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*i, 2*j-1] = K[2*i, 2*j-1] -alfa*C*S
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*i, 2*j-1, K[2*i, 2*j-1]))
-    #     #print('i = {0}, j = {1}, valor = {2}'.format(i,j,K[2*i, 2*j-1]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*i, 2*j] += -alfa*S**2
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*i, 2*j, K[2*i, 2*j]))
-    # except:
-    #     pass
-
-    # try:
-    #     K[2*j-1, 2*i-1] += -alfa*C**2
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*j-1, 2*i-1, K[2*j-1, 2*i-1]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*j-1, 2*i] += -alfa*C*S
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*j-1, 2*i, K[2*j-1, 2*i]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*j-1, 2*j-1] += alfa*C**2
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*j-1, 2*j-1, K[2*j-1, 2*j-1]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*j-1, 2*j] += alfa*C*S
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*j-1, 2*j, K[2*j-1, 2*j]))
-    # except:
-    #     pass
-
-    # try:
-    #     K[2*j, 2*i-1] += -alfa*C*S
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*j, 2*i-1, K[2*j, 2*i-1]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*j, 2*i] += -alfa*S**2
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*j, 2*i, K[2*j, 2*i]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*j, 2*j-1] += alfa*C*S
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*j, 2*j-1, K[2*j, 2*j-1]))
-    # except:
-    #     pass
-    # try:
-    #     K[2*j, 2*j] += alfa*S**2
-    #     print('altera posição: i={0} e j={1} para {2}'.format(2*j, 2*j, K[2*j, 2*j]))
-    # except:
-    #     pass
-
+        K[2*j, 2*j] = K[2*j, 2*j]+alfa*C**2
+        if 1 <= 2*j+1 < n:
+            K[2*j, 2*j+1] = K[2*j, 2*j+1]+alfa*C*S
+            K[2*j+1, 2*j] = K[2*j+1, 2*j]+alfa*C*S
+    if 0 <= 2*j+1 < n:
+        K[2*j+1, 2*j+1] = K[2*j+1, 2*j+1]+alfa*S**2
+        
     try:
         m[i] = m[i]+ 1/2*rho*A*L
     except:
@@ -192,6 +107,16 @@ for i in range(0, tilde_K.shape[0]):
         if np.abs(tilde_K[i,j]) < 1e-6:
             tilde_K[i,j] = 0
 
+print('massas')
+print(m)
+
+print(check_symmetric(M))
+
+np.savetxt('K.txt', K)
+
+np.savetxt('M.txt', M)
+
+np.savetxt('tilde_M.txt', tilde_M)
 
 # Calcula as frequências
 w = np.zeros(n_moveis*2)
@@ -213,12 +138,9 @@ for i in range(0, n_moveis*2):
 
 print('M:')
 print(M)
-print('K:')
-print(K)
+print('tilde_M:')
+print(tilde_M)
+print('tilde_K:')
+print(tilde_K)
 
-#print(w)
-print(check_symmetric(M))
-
-np.savetxt('K.txt', M)
-
-np.savetxt('M.txt', M)
+print(w)
