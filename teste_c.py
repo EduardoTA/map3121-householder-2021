@@ -9,14 +9,13 @@ import math as math
 #     return np.all(np.abs(a-a.T) < tol)
 
 def teste_c():
-    # Menu de seleção
-    print('############')
+    print('\n############')
     print('Teste c selecionado')
-    print('############')
+    print('############\n')
 
     epsilon = 0.1
     deslocamentos = True
-    f = 0
+    f = 0 # Arquivo será inserido nessa variável
 
     n_total = 0 # Número de nós da treliça
     n_moveis = 0 # Número de nós móveis da treliça
@@ -29,8 +28,6 @@ def teste_c():
     K = 0 # Matrix de rigidez total
     m = 0 # Vetor de massas dos nós
     M = 0 # Matriz onde as massas dos nós estarão na diagonal principal
-
-    # count_nos = 0 # Contador para saber quando chegou nos nós fixos
 
     # Fazendo leitura das entradas de usuário
     try:
@@ -50,9 +47,8 @@ def teste_c():
     except:
         print('epsilon deve ser número real, pe: 1e-6')
         return
-    print("\nA treliça descrita no arquivo será resolvida...\n")
 
-    # Se for detectado erro na leitura do arquivo, a exceção não vai travar o programa
+    ## Faz a leitura das duas primeiras linhas do arquivo
     try:
         n_total = int(f.pop(0)) # Número de nós da treliça
         n_moveis = int(f.pop(0)) # Número de nós móveis da treliça
@@ -88,20 +84,13 @@ def teste_c():
             print('Erro na leitura dos parâmetros das barras da treliça')
             return
 
-        alfa = A*E/L # Coeficiente da equação (1)
-        C = math.cos(theta*math.pi/180) # Cosseno da equação (1)
-        S = math.sin(theta*math.pi/180) # Seno da equação (1)
+        alfa = A*E/L # Coeficiente da equação
+        C = math.cos(theta*math.pi/180) # Cosseno da equação
+        S = math.sin(theta*math.pi/180) # Seno da equação
 
-        # print('i = '+str(i))
-        # print('j = '+str(j))
-        # print('theta = '+str(theta))
-        # print('L = '+str(L))
-        # print('C = '+str(C))
-        # print('S = '+str(S))
-
-        # Fazendo o cálculo de cada elemento da matriz da equação (1)
+        # Fazendo o cálculo de cada elemento da matriz da equação
         # E somando à matriz K na posição correta
-        n = n_moveis*2 # Dimensão das matrizes
+        n = n_moveis*2 # Dimensão das matrizes K e M
         if 0 <= 2*i < n:
             K[2*i, 2*i] = K[2*i, 2*i]+alfa*C**2
             if 0 <= 2*i+1 < n:
@@ -135,12 +124,12 @@ def teste_c():
         if 0 <= j < n_moveis:
             m[j] = m[j] + 1/2*rho*A*L
 
-        # count_nos += count_nos
     
-    # A matriz K e o vetor m estão completamente montados
+    # Agora a matriz K e o vetor m estão completamente montados
 
-    # Agora são montadas as matrizes M, tilde_M e tilde_K
-    tilde_M = np.zeros((n_moveis*2, n_moveis*2)) # M^(-1/2)
+    # Agora serão montadas as matrizes M, tilde_M e tilde_K
+
+    tilde_M = np.zeros((n_moveis*2, n_moveis*2)) # Instancia tilde_M = M^(-1/2)
     
     # Este for monta as matrizes M e tilde_M
     for no in range(0, n_moveis):
@@ -166,27 +155,39 @@ def teste_c():
     for j in range(n_moveis*2):
         z[:,j] = tilde_M.dot(resultados[1][:,j]) # z = M^(-1/2)*y
     
+    # Monta uma lista com as frequencias e modos naturais
+    list = []
+    for i in range(0, n_moveis*2):
+        list.append([w[i], z[:, i]])
+    
+    list = sorted(list,key=lambda x: x[0]) # Ordena essa lista da menor freq. para a maior
+
+    print("\n======================RESULTADOS DO TESTE C======================")
+    
+    print("\nForam necessárias k = {0} iterações do método QR\n".format(resultados[2]))
+
     # Seletor de opções:
     def seletor():
-        print('\n')
-        print('############')
         print('Selecione uma opção:')
         print('(0) Para imprimir as frequências e modos naturais no terminal')
-        print('(1) Dump de matrizes e vetores do programa')
-        print('(2) Estimativa de erro')
+        print('(1) Dump de matrizes e vetores do programa em arquivos')
+        print('(2) Estimativas de erro')
         print('(qualquer outra) Para sair do teste')
         selecao = input('= ')
+
         if selecao == '0':
+            # Esta seleção faz a apenas a impressão no terminal das freqs. e modos naturais
             print('\n')
             for i in range(0, n_moveis*2):
                 # Configuração de impressão para ter mais dígitos
                 np.set_printoptions(formatter={'float': '{: 12.10f}'.format})
 
                 # Impressão dos autovals/autovecs
-                print('freq: {0:12.10f},\nmodo:'.format(w[i]), z[:, i])
+                print('freq: {0:12.10f},\nmodo:'.format(list[i][0]), list[i][1])
                 print('\n')
             seletor()
         elif selecao == '1':
+            # Esta seleção imprime as matrizes em arquivos
             print('\n')
             try:
                 np.savetxt('m.txt', m)
@@ -201,13 +202,14 @@ def teste_c():
                 print('Arquivos não foram criados com sucesso')
             seletor()
         elif selecao == '2':
+            # Esta seleção faz estimativas de erro
             print('\n')
             print('Estimativa de erro comparando sqrt((K*z)/(M*z)) com as frequências obtidas')
             erros = np.zeros(n)
             for i in range(0, n_moveis*2):
                 erros[i] = np.abs(np.sqrt(np.max(np.divide(K.dot(z[:,i]), M.dot(z[:,i])))) - w[i])
-                print('Autovalor obtido fazendo sqrt((K*z)/(M*z)): {0:12.10f},'
-                        '  Autovalor obtido pelo método: {1:12.10f}, erro: {2}'
+                print('Freq. obtida fazendo sqrt((K*z)/(M*z)): {0:12.10f},'
+                        '  Freq. obtida pelo método: {1:12.10f}, erro: {2}'
                         .format(np.sqrt(np.max(np.divide(K.dot(z[:,i]), M.dot(z[:,i])))), w[i], erros[i]))
             print('Erro máximo = {0}\n'.format(np.max(erros)))
             
@@ -228,29 +230,3 @@ def teste_c():
             return
     seletor()
     return
-
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    
-
-    print('M:')
-    print(M)
-    print('tilde_M:')
-    print(tilde_M)
-    print('tilde_K:')
-    print(tilde_K)
-
-    print(w)
-
-teste_c()

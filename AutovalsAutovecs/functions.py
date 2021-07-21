@@ -1,57 +1,101 @@
 import numpy as np
 import math as math
 
-def HouseHolder(A, H, n):
+def HouseHolder(A, HT, n):
     A = np.copy(A)
-    H = np.copy(H)
+    HT = np.copy(HT)
+
+    # Função interna que faz o produto interno dos vetores a e b,
+    # utilizando os últimos k elementos dos vetores a e b
     def dot_prod(a,b,k):
         soma = 0
-        for i in range(k,a.shape[0]):
-            soma = soma + a[i]*b[i]
+        #a = np.squeeze(np.asarray(a))
+        #b = np.squeeze(np.asarray(b))
+        size_a = np.max(a.shape)
+        size_b = np.max(b.shape)
+        for i in range(0,k):
+            soma = soma + a[size_a-1-i]*b[size_b-1-i]
         return soma
-    
-    w = np.zeros(n)
-    a = np.zeros(n)
 
-    produto_escalar = np.zeros(n)
+    w = np.zeros(n-1)  # Vetor onde o bar_w(I) da iteração atual é guardado
+
+    prod = 0 # Temporário onde os coeficientes temporários são armazenados
 
     for I in range(0,n-2):
-        a = np.array(A[:,I]) # I-ésima coluna de A
-        a[I] = 0 # aI = [0, bar_aI]
-        w = a+0 # wI = aI
-        w[I+1] = w[I+1]+np.sign(a[I+1])*math.sqrt(dot_prod(a,a,I+1)) # aplicando o e da fórmula do w
+        ## Cálculo de bar_w(I), armazenado nas n-I-1 últimas posições do vetor w
+        # Fazendo bar_w(I) = bar_a(I) + delta*norm(bar_a(I))*e(I)
+        # Extraindo a coluna I de A, da posição I+1 em diante
+        for i in range(I+1, n):
+            w[i-1] = A[i,I]
 
+        # Otimização: apenas atualizar a única posição de bar_w(I) que se altera
+        w[I] = w[I]+np.sign(w[I])*math.sqrt(dot_prod(w,w,n-I-1)) # aplicando o e da fórmula do w
+
+
+        # Otimização: como ww será necessário várias vezes, armazenar em um temporário
+        ww = dot_prod(w,w,n-I-1) # Produto escalar de w.w, mas só de um pedaço, pois deve agir como se o resto do vetor fosse 0
+
+
+        ## Cálculo dos elementos da linha I e coluna I da matriz A(I+1) = Hw(I)*A(I)*Hw(I)
         for i in range(I+1,n):
+            # Otimização: o elemento A[I,I] permanece inalterado
             if i>I+1:
-                # Aplicando zeros na I-ésima linha e coluna
+                # Otimimzação: colocar 0s nas posições fora da três diagonais centrais da linha I e coluna I
                 A[i,I] = 0
                 A[I,i] = 0
             else:
-                # Elemento não nulo da I-ésima linha e coluna
-                A[i,I] = a[i]-2*dot_prod(w,a,I)/dot_prod(w,w,I)*w[i]
-                A[I,i] = a[i]-2*dot_prod(w,a,I)/dot_prod(w,w,I)*w[i]
-        # Iterando sobre matriz AI
-        # -> Multiplicação por HwI pela esquerda
+                # O else é ativado na primeira subiteração, ou seja,
+                # quando i = I+1
+
+                # O prod é o coeficiente da equação Hw*x
+                # neste caso o 'x' é a coluna I da matriz A, mas apenas considerando os últimos n-I-1 elementos
+                # e 'w' é o bar_w(I)
+                # Assim, pode-se calcular os únicos dois valores alterados
+                prod = -2*dot_prod(w,A[:,I],n-I-1)/ww
+                A[I+1,I] = A[I+1,I]+prod*w[I]
+                A[I,I+1] = A[I,I+1]+prod*w[I]
+        
+        ## Este for faz a multiplicação da submatriz de A(I) (a partir da linha I, sem contar ela
+        # e a partir da coluna I, sem contar ela) com a matriz H_bar_w(I), pela esquerda
+        #
+        # Multiplicar pela esquerda equivale a pegar as colunas da submatriz e tratar
+        # como se fossem os vetores x, e isso resulta nas colunas de H_bar_w(I)*submatriz.
+        # Fazendo desta forma, só é necessário usar um temporário 'prod', mais uma otimização
         for j in range(I+1,n):
-            produto_escalar[0] = -2*dot_prod(w,np.squeeze((np.asarray(A[:,j]))),I+1)/dot_prod(w,w,I+1)
+            prod = -2*dot_prod(w, A[:,j], n-I-1)/ww
+
+            # Este for calcula uma coluna j da submatriz
             for i in range(I+1,n):
-                A[i,j] = A[i,j]+produto_escalar[0]*w[i]
+                A[i,j]=A[i,j]+prod*w[i-1]
+        
+        ## Este for faz a multiplicação da submatriz de A(I) (a partir da linha I, sem contar ela
+        # e a partir da coluna I, sem contar ela) do for anterior com a matriz H_bar_w(I), pela direita
+        #
+        # Multiplicar pela direita equivale a pegar as linhas da submatriz e tratar
+        # como se fossem os vetores 'x', e isso resulta nas linhas de H_bar_w(I)*submatriz*H_bar_w(I).
+        # Fazendo desta forma, só é necessário usar um temporário 'prod', mais uma otimização
+        for i in range(I+1,n):
+            prod = -2*dot_prod(w, A[i,:], n-I-1)/ww
+            # Este for calcula apenas os valores do triângulo superior
+            for j in range(i, n):
+                A[i,j] = A[i,j]+prod*w[j-1]
+            
+            # Como a matriz resultante deste passo é simétrica, podemos refletir os valores já calculados do
+            # triângulo superior, mais uma otimização
+            for j in range(I+1,i):
+                A[i,j]=A[j,i]+0
+        
+        ## Multiplicação para encontrar HT
+        #
+        # Assim como no for anterior, as linhas da matriz na iteração anterior são tratadas como o 'x'
+        # E são obtidas as linhas de HT
+        # Assim só um temporário 'prod' é necessário, mais uma otimização
+        for i in range(0,n):
+            prod = -2*dot_prod(w,HT[i,:],n-I-1)/ww
+            for j in range(I+1,n):
+                HT[i,j]=HT[i,j]+prod*w[j-1]
     
-        # -> Multiplicação por HwI pela direita
-        for j in range(I+1,n):
-            produto_escalar[j] = -2*dot_prod(w,np.squeeze((np.asarray(A[j,:]))),I+1)/dot_prod(w,w,I+1)
-        for j in range(I+1,n):
-            for i in range(j,n):
-                A[i,j] = A[j,i]+produto_escalar[j]*w[i]
-                A[j,i] = A[i,j]
-        # Multiplicação para encontrar HT
-        for i in range(0,n):
-            produto_escalar[i] = -2*dot_prod(w,np.squeeze((np.asarray(H[i,:]))),I+1)/dot_prod(w,w,I+1)
-        for i in range(0,n):
-            for j in range(I,n):
-                H[i,j]=H[i,j]+produto_escalar[i]*w[j]
-    #print("Erro holdeholder = {0}".format(np.matmul(H, np.transpose(H))-np.identity(n)))
-    return (A, H)
+    return (A, HT)
 
 def metodo_QR(alfa, beta, epsilon, deslocamentos, V):
     # Este método faz o cálculo dos cossenos (forma estável)
@@ -258,9 +302,11 @@ def metodo_QR(alfa, beta, epsilon, deslocamentos, V):
     return (Diagonal_principal, temp_V, k)
 
 def AutovalsAutovecs(A, epsilon, deslocamentos):
-    H = np.identity(A.shape[0])
-    householder = HouseHolder(A, H, A.shape[0])
-    alfa = np.zeros(A.shape[0])
+    HT = np.identity(A.shape[0]) # Matriz onde as transformações de Householder transpostas serão acumuladas
+    householder = HouseHolder(A, HT, A.shape[0]) # Tridiagonalizando a matriz
+    
+    # Convertendo a matriz tridiagonal em uma forma compatível com o método QR
+    alfa = np.zeros(A.shape[0]) 
     beta = np.zeros(A.shape[0]-1)
 
     for i in range(0, householder[0].shape[0]):
@@ -268,6 +314,4 @@ def AutovalsAutovecs(A, epsilon, deslocamentos):
     for i in range(0, householder[0].shape[0]-1):
         beta[i] = householder[0][i+1,i]
     
-    return metodo_QR(alfa, beta, epsilon, deslocamentos, householder[1])
-
-
+    return metodo_QR(alfa, beta, epsilon, deslocamentos, householder[1]) # Aplicando o método QR
