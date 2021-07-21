@@ -1,3 +1,5 @@
+# Nome: Eduardo Tadashi Asato,  nusp: 10823810
+
 import AutovalsAutovecs as aa
 import numpy as np
 import math as math

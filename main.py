@@ -1,9 +1,15 @@
+# Nome: Eduardo Tadashi Asato,  nusp: 10823810
+
 from teste_a import teste_a as teste_a
 from teste_b import teste_b as teste_b
 from teste_c import teste_c as teste_c
 from teste_d import teste_d as teste_d
 
 def seletor():
+    print('\n============================================')
+    print("\nExercício-programa 2 de MAP3121, 2021")
+    print("Nome: Eduardo Tadashi Asato,     nusp: 10823810\n")
+
     print('============================================\n')
     print('Selecione uma opção:')
     print('(0 ou a) Para iniciar o teste a (Cálculo dos autovals e autovecs da matriz no input-a)')
