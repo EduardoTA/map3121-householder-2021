@@ -63,7 +63,7 @@ def teste_b():
 
     for i in range(0, A.shape[0]):
         # Configuração de impressão para ter mais dígitos
-        #np.set_printoptions(formatter={'float': '{: 12.10f}'.format})
+        #np.set_printoptions(formatter={'float': '{: 12.10ff}'.format})
 
         # Impressão dos autovals/autovecs
         print('Autovalor: {0:12.10f}, Autovetor:'.format(resultados[0][i]), resultados[1][:, i])

@@ -34,7 +34,7 @@ def EstimativasErroGerais(A, Lambda, HV):
     print("\nEstimativa de erro fazendo max(abs(A*v-lambda*v)) para cada autovalor")
     for i in range(0, n):
         erros[i] = np.max(np.abs(A.dot(HV[:, i])-Lambda[i]*HV[:, i]))
-        print('Autovalor: {0:12.10f}, Erro {1:12.10f}'
+        print('Autovalor: {0:12.10f}, Erro {1}'
                 .format(Lambda[i], erros[i]))
     print('Erro máximo = {0}\n'.format(np.max(erros)))
 

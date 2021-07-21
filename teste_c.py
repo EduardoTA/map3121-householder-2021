@@ -207,10 +207,10 @@ def teste_c():
             print('Estimativa de erro comparando sqrt((K*z)/(M*z)) com as frequências obtidas')
             erros = np.zeros(n)
             for i in range(0, n_moveis*2):
-                erros[i] = np.abs(np.sqrt(np.max(np.divide(K.dot(z[:,i]), M.dot(z[:,i])))) - w[i])
+                erros[i] = np.abs(np.sqrt(np.max(np.divide(K.dot(list[i][1]), M.dot(list[i][1])))) - list[i][0])
                 print('Freq. obtida fazendo sqrt((K*z)/(M*z)): {0:12.10f},'
                         '  Freq. obtida pelo método: {1:12.10f}, erro: {2}'
-                        .format(np.sqrt(np.max(np.divide(K.dot(z[:,i]), M.dot(z[:,i])))), w[i], erros[i]))
+                        .format(np.sqrt(np.max(np.divide(K.dot(list[i][1]), M.dot(list[i][1])))), list[i][0], erros[i]))
             print('Erro máximo = {0}\n'.format(np.max(erros)))
             
             print('\n')
@@ -218,10 +218,10 @@ def teste_c():
 
             erros = np.zeros(n)
             for i in range(0, n_moveis*2):
-                erros[i] = np.max(np.abs(-(w[i]**2)*M.dot(z[:,i])+K.dot(z[:,i])))
+                erros[i] = np.max(np.abs(-(list[i][0]**2)*M.dot(list[i][1])+K.dot(list[i][1])))
                 print('freq.: {0:12.10f}, |-w^2*M*z + K*z|: {1:12.10f}'
-                        .format(w[i],
-                        np.max(np.abs(-(w[i]**2)*M.dot(z[:,i])+K.dot(z[:,i]))))
+                        .format(list[i][0],
+                        np.max(np.abs(-(list[i][0]**2)*M.dot(list[i][1])+K.dot(list[i][1]))))
                     )
             print('Erro máximo = {0}\n'.format(np.max(erros)))
             print('\n')
